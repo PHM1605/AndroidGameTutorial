@@ -9,7 +9,7 @@ import android.view.MotionEvent;
 import com.example.androidgametutorial.GamePanel;
 
 public class TouchEvents {
-  private float xCenter = 360, yCenter = 1300, radius = 100;
+  private float xCenter = 250, yCenter = 500, radius = 100;
   private Paint circlePaint, yellowPaint;
   private float xTouch, yTouch;
   private boolean touchDown;

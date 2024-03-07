@@ -18,6 +18,7 @@ public class PlayingUI {
 
   // For Multitouch joystick tracking
   private int joystickPointerId = -1;
+  private int attackBtnPointerId = -1;
   private boolean touchDown; // joystick touchDown state
 
   public PlayingUI(Playing playing) {
@@ -69,7 +70,11 @@ public class PlayingUI {
         if (checkInsideJoyStick(eventPos, pointerId)) {
           touchDown = true;
         } else if(checkInsideAttackBtn(eventPos)) {
-          spawnSkeleton();
+          // if another finger touch attack button -> do nothing
+          if(attackBtnPointerId < 0) {
+            playing.setAttacking(true);
+            attackBtnPointerId = pointerId;
+          }
         }
         else {
           if(isIn(eventPos, btnMenu)) {
@@ -89,6 +94,11 @@ public class PlayingUI {
           }
           // unPush will check if pointerId the same as what triggered; setPushed(false, pointerId) do not
           btnMenu.unPush(pointerId);
+          // if release the finger that trigger the attack
+          if (pointerId == attackBtnPointerId) {
+            playing.setAttacking(false);
+            attackBtnPointerId = -1;
+          }
         }
         break;
 

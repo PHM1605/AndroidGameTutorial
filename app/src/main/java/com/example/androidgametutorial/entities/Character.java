@@ -1,5 +1,7 @@
 package com.example.androidgametutorial.entities;
 
+import static com.example.androidgametutorial.helpers.GameConstants.Sprite.SIZE;
+
 import android.graphics.PointF;
 
 import com.example.androidgametutorial.helpers.GameConstants;
@@ -10,7 +12,7 @@ public abstract class Character extends Entity{
   protected final GameCharacters gameCharType;
 
   public Character(PointF pos, GameCharacters gameCharType) {
-    super(pos, 1, 1);
+    super(pos, SIZE, SIZE);
     this.gameCharType = gameCharType;
   }
 
@@ -22,6 +24,11 @@ public abstract class Character extends Entity{
       if(aniIndex >= 4)
         aniIndex = 0;
     }
+  }
+
+  public void resetAnimation() {
+    aniTick = 0;
+    aniIndex = 0;
   }
 
   // Getter

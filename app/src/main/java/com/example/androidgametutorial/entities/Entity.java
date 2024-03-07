@@ -7,7 +7,7 @@ public abstract class Entity {
   protected RectF hitbox;
 
   public Entity(PointF pos, float width, float height) {
-    this.hitbox = new RectF(pos.x, pos.y, width, height);
+    this.hitbox = new RectF(pos.x, pos.y, pos.x+width, pos.y+height);
   }
 
   public RectF getHitbox() {

@@ -1,4 +1,4 @@
-package com.example.androidgametutorial;
+package com.example.androidgametutorial.main;
 
 import androidx.appcompat.app.AppCompatActivity;
 

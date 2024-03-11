@@ -1,5 +1,8 @@
 package com.example.androidgametutorial.gamestates;
 
+import static com.example.androidgametutorial.helpers.GameConstants.Sprite.X_DRAW_OFFSET;
+import static com.example.androidgametutorial.helpers.GameConstants.Sprite.Y_DRAW_OFFSET;
+
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -95,22 +98,22 @@ public class Playing extends BaseState implements GameStateInterface {
     switch(player.getFaceDir()) {
       case GameConstants.Face_Dir.UP:
         pos = new PointF(
-            player.getHitbox().left+1.75f*GameConstants.Sprite.SCALE_MULTIPLIER,
-            player.getHitbox().top-Weapons.BIG_SWORD.getHeight());
+            player.getHitbox().left-0.5f*GameConstants.Sprite.SCALE_MULTIPLIER,
+            player.getHitbox().top-Weapons.BIG_SWORD.getHeight()-Y_DRAW_OFFSET);
         break;
       case GameConstants.Face_Dir.DOWN:
         pos = new PointF(
-            player.getHitbox().left+2.5f*GameConstants.Sprite.SCALE_MULTIPLIER,
+            player.getHitbox().left+0.75f*GameConstants.Sprite.SCALE_MULTIPLIER,
             player.getHitbox().bottom);
         break;
       case GameConstants.Face_Dir.LEFT:
         pos = new PointF(
-            player.getHitbox().left-Weapons.BIG_SWORD.getHeight(),
+            player.getHitbox().left-Weapons.BIG_SWORD.getHeight() - X_DRAW_OFFSET,
             player.getHitbox().bottom-0.75f*GameConstants.Sprite.SCALE_MULTIPLIER-Weapons.BIG_SWORD.getWidth());
         break;
       case GameConstants.Face_Dir.RIGHT:
         pos = new PointF(
-            player.getHitbox().right,
+            player.getHitbox().right + X_DRAW_OFFSET,
             player.getHitbox().bottom-0.75f*GameConstants.Sprite.SCALE_MULTIPLIER-Weapons.BIG_SWORD.getWidth());
         break;
       default:
@@ -159,8 +162,13 @@ public class Playing extends BaseState implements GameStateInterface {
 
   private void drawPlayer(Canvas c) {
     c.drawBitmap(
+        Weapons.SHADOW.getWeaponImg(),
+        player.getHitbox().left,
+        player.getHitbox().bottom - 4 * GameConstants.Sprite.SCALE_MULTIPLIER,
+        null);
+    c.drawBitmap(
         player.getGameCharType().getSprite(getAniIndex(), player.getFaceDir()),
-        player.getHitbox().left - GameConstants.Sprite.X_DRAW_OFFSET,
+        player.getHitbox().left - X_DRAW_OFFSET,
         player.getHitbox().top - GameConstants.Sprite.Y_DRAW_OFFSET,
         null
     );
@@ -223,8 +231,13 @@ public class Playing extends BaseState implements GameStateInterface {
   // draw skeletons
   public void drawCharacter(Canvas canvas, Character c) {
     canvas.drawBitmap(
+        Weapons.SHADOW.getWeaponImg(),
+        c.getHitbox().left + cameraX,
+        c.getHitbox().bottom - 4 * GameConstants.Sprite.SCALE_MULTIPLIER + cameraY,
+        null);
+    canvas.drawBitmap(
         c.getGameCharType().getSprite(c.getAniIndex(), c.getFaceDir()),
-        c.getHitbox().left + cameraX - GameConstants.Sprite.X_DRAW_OFFSET,
+        c.getHitbox().left + cameraX - X_DRAW_OFFSET,
         c.getHitbox().top + cameraY - GameConstants.Sprite.Y_DRAW_OFFSET,
         null
     );

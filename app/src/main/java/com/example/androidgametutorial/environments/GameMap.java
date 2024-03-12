@@ -1,27 +1,42 @@
 package com.example.androidgametutorial.environments;
 
-import android.graphics.Canvas;
-
 import com.example.androidgametutorial.entities.Building;
+import com.example.androidgametutorial.entities.enemies.Skeleton;
 import com.example.androidgametutorial.helpers.GameConstants;
 
 import java.util.ArrayList;
 
 public class GameMap {
   private int[][] spriteIds;
-  private Floor floorType;
+  private Tiles tilesType;
   private ArrayList<Building> buildingArrayList;
+  private ArrayList<Doorway> doorwayArrayList;
+  private ArrayList<Skeleton> skeletonArrayList;
 
-  public GameMap(int[][] spriteIds, Floor floorType, ArrayList<Building> buildingArrayList) {
+  public GameMap(int[][] spriteIds, Tiles tilesType, ArrayList<Building> buildingArrayList, ArrayList<Skeleton> skeletonArrayList) {
     this.spriteIds = spriteIds;
-    this.floorType = floorType;
+    this.tilesType = tilesType;
     this.buildingArrayList = buildingArrayList;
+    this.doorwayArrayList = new ArrayList<>();
+    this.skeletonArrayList = skeletonArrayList;
+  }
+
+  public void addDoorway(Doorway doorway) {
+    this.doorwayArrayList.add(doorway);
+  }
+
+  public ArrayList<Doorway> getDoorwayArrayList() {
+    return doorwayArrayList;
   }
 
   public ArrayList<Building> getBuildingArrayList() {
     return buildingArrayList;
   }
 
+  public ArrayList<Skeleton> getSkeletonArrayList() {
+    return skeletonArrayList;
+  }
+  
   public int getSpriteId(int xIndex, int yIndex) {
     return spriteIds[yIndex][xIndex];
   }
@@ -34,7 +49,17 @@ public class GameMap {
     return spriteIds.length;
   }
 
-  public Floor getFloorType() {
-    return floorType;
+  public Tiles getFloorType() {
+    return tilesType;
   }
+
+  public int getMapWidth() {
+    return getArrayWidth() * GameConstants.Sprite.SIZE;
+  }
+
+  public int getMapHeight() {
+    return getArrayHeight() * GameConstants.Sprite.SIZE;
+  }
+
+
 }

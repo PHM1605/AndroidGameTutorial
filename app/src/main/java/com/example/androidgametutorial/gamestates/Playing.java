@@ -17,8 +17,10 @@ import com.example.androidgametutorial.entities.Character;
 import com.example.androidgametutorial.entities.Player;
 import com.example.androidgametutorial.entities.Weapons;
 import com.example.androidgametutorial.entities.enemies.Skeleton;
+import com.example.androidgametutorial.environments.Doorway;
 import com.example.androidgametutorial.environments.MapManager;
 import com.example.androidgametutorial.helpers.GameConstants;
+import com.example.androidgametutorial.helpers.HelpMethods;
 import com.example.androidgametutorial.helpers.interfaces.GameStateInterface;
 import com.example.androidgametutorial.main.Game;
 import com.example.androidgametutorial.ui.PlayingUI;
@@ -32,22 +34,21 @@ public class Playing extends BaseState implements GameStateInterface {
   private MapManager mapManager;
 //  private BuildingManager buildingManager;
   private Player player;
-  private final ArrayList<Skeleton> skeletons;
   private final Paint redPaint;
 
   private PlayingUI playingUI;
   private RectF attackBox = null;
   private boolean attacking = false;
   private boolean attackChecked;
+  private boolean doorwayJustPassed;
 
   public Playing(Game game) {
     super(game);
-    mapManager = new MapManager();
+    mapManager = new MapManager(this);
     calcStartCameraValues();
 //    buildingManager = new BuildingManager();
 
     player = new Player();
-    skeletons = new ArrayList<>();
     playingUI = new PlayingUI(this);
 
     redPaint = new Paint();
@@ -55,8 +56,8 @@ public class Playing extends BaseState implements GameStateInterface {
     redPaint.setStyle(Paint.Style.STROKE);
     redPaint.setColor(Color.RED);
 
-    for(int i=0; i<5; i++)
-      spawnSkeleton();
+//    for(int i=0; i<5; i++)
+//      spawnSkeleton();
 
     updateWepHitbox();
   }
@@ -65,18 +66,32 @@ public class Playing extends BaseState implements GameStateInterface {
   public void update(double delta) {
     updatePlayerMove(delta);
     player.update(delta, movePlayer);
+    mapManager.setCameraValues(cameraX, cameraY);
+    checkForDoorway();
     updateWepHitbox();
 
     // Check attack - deal damage to skeleton - only once
     if(attacking && !attackChecked)
       checkAttack();
 
-    for (Skeleton skeleton: skeletons)
+    for (Skeleton skeleton: mapManager.getCurrentMap().getSkeletonArrayList())
       if (skeleton.isActive())
-        skeleton.update(delta);
+        skeleton.update(delta, mapManager.getCurrentMap());
+  }
 
-    mapManager.setCameraValues(cameraX, cameraY);
-//    buildingManager.setCameraValues(cameraX, cameraY);
+  private void checkForDoorway() {
+    Doorway doorwayPlayerIsOn = mapManager.isPlayerOnDoorway(player.getHitbox());
+    if (doorwayPlayerIsOn != null) {
+      if (!doorwayJustPassed) {
+        mapManager.changeMap(doorwayPlayerIsOn.getDoorwayConnectedTo());
+      }
+    } else {
+        doorwayJustPassed = false;
+    }
+  }
+
+  public void setDoorwayJustPassed(boolean doorwayJustPassed) {
+    this.doorwayJustPassed = doorwayJustPassed;
   }
 
   private void calcStartCameraValues() {
@@ -90,7 +105,7 @@ public class Playing extends BaseState implements GameStateInterface {
     attackBoxWithoutCamera.top -= cameraY;
     attackBoxWithoutCamera.right -= cameraX;
     attackBoxWithoutCamera.bottom -= cameraY;
-    for(Skeleton s: skeletons) {
+    for(Skeleton s: mapManager.getCurrentMap().getSkeletonArrayList()) {
       if (attackBoxWithoutCamera.intersects(s.getHitbox().left, s.getHitbox().top, s.getHitbox().right, s.getHitbox().bottom)) {
         s.setActive(false);
       }
@@ -165,7 +180,7 @@ public class Playing extends BaseState implements GameStateInterface {
     mapManager.draw(c);
 //    buildingManager.draw(c);
     drawPlayer(c);
-    for (Skeleton skeleton: skeletons) {
+    for (Skeleton skeleton: mapManager.getCurrentMap().getSkeletonArrayList()) {
       if (skeleton.isActive())
         drawCharacter(c, skeleton);
     }
@@ -286,18 +301,18 @@ public class Playing extends BaseState implements GameStateInterface {
       ySpeed *= -1;
     }
 
-    // Player width and height
-    int pWidth = (int) player.getHitbox().width();
-    int pHeight = (int) player.getHitbox().height();
     // Camera displacement X and Y
     float deltaX = xSpeed * baseSpeed * (-1);
     float deltaY = ySpeed * baseSpeed * (-1);
     if (xSpeed <= 0) pWidth = 0;
     if (ySpeed <=0) pHeight = 0;
-    if (mapManager.canMoveHere(player.getHitbox().left-(cameraX+deltaX)+pWidth, player.getHitbox().top-(cameraY+deltaY)+pHeight)) {
-      cameraX += deltaX;
-      cameraY += deltaY;
-    }
+
+//    float xPosToCheck = player.getHitbox().left-(cameraX+deltaX)+pWidth;
+//    float yPosToCheck = player.getHitbox().top - (cameraY+deltaY) + pHeight;
+//    if(HelpMethods.CanWalkHere(xPosToCheck, yPosToCheck, mapManager.getCurrentMap())) {
+//      cameraX += deltaX;
+//      cameraY += deltaY;
+//    }
   }
 
   public void setPlayerMoveTrue(PointF lastTouchDiff) {
@@ -319,13 +334,14 @@ public class Playing extends BaseState implements GameStateInterface {
     playingUI.touchEvents(event);
   }
 
-  public void spawnSkeleton() {
-    skeletons.add(new Skeleton(new PointF(player.getHitbox().left - cameraX, player.getHitbox().top - cameraY)));
-  }
-
   public void setAttacking(boolean attacking) {
     this.attacking = attacking;
     if (!attacking)
       attackChecked = false;
+  }
+
+  public void setCameraValues(PointF cameraPos) {
+    this.cameraX = cameraPos.x;
+    this.cameraY = cameraPos.y;
   }
 }

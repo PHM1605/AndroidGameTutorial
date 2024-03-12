@@ -8,14 +8,14 @@ import com.example.androidgametutorial.R;
 import com.example.androidgametutorial.helpers.GameConstants;
 import com.example.androidgametutorial.helpers.interfaces.BitmapMethods;
 
-public enum Floor implements BitmapMethods {
+public enum Tiles implements BitmapMethods {
   // width/height is in number of tiles in the png file
   OUTSIDE(R.drawable.titeset_floor, 22, 26),
-  INSIDE(R.drawable.floor_inside, 22, 17);
+  INSIDE(R.drawable.floor_inside, 22, 22);
 
   private Bitmap[] sprites;
 
-  Floor(int resId, int tilesInWidth, int tilesInHeight) {
+  Tiles(int resId, int tilesInWidth, int tilesInHeight) {
     options.inScaled = false;
     sprites = new Bitmap[tilesInHeight*tilesInWidth];
     Bitmap spriteSheet = BitmapFactory.decodeResource(MainActivity.getGameContext().getResources(), resId, options);

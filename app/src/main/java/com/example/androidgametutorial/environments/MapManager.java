@@ -2,26 +2,45 @@ package com.example.androidgametutorial.environments;
 
 import android.graphics.Canvas;
 import android.graphics.PointF;
+import android.graphics.RectF;
 
 import com.example.androidgametutorial.entities.Building;
 import com.example.androidgametutorial.entities.Buildings;
+import com.example.androidgametutorial.gamestates.Playing;
 import com.example.androidgametutorial.helpers.GameConstants;
+import com.example.androidgametutorial.helpers.HelpMethods;
+import com.example.androidgametutorial.main.MainActivity;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public class MapManager {
 
   private GameMap currentMap, outsideMap, insideMap;
   private float cameraX, cameraY;
+  Playing playing;
 
-  public MapManager() {
+  public MapManager(Playing playing) {
+    this.playing = playing;
     initTestMap();
   }
 
   public void setCameraValues(float cameraX, float cameraY) {
     this.cameraX = cameraX;
     this.cameraY = cameraY;
+  }
+
+  public GameMap getCurrentMap() {
+    return currentMap;
+  }
+
+  public void changeMap(Doorway doorwayTarget) {
+    this.currentMap = doorwayTarget.getGameMapLocatedIn();
+    float cX = MainActivity.GAME_WIDTH/2 - doorwayTarget.getPosOfDoorway().x;
+    float cY = MainActivity.GAME_HEIGHT/2 - doorwayTarget.getPosOfDoorway().y;
+    playing.setCameraValues(new PointF(cX, cY));
+    cameraX = cX;
+    cameraY = cY;
+    playing.setDoorwayJustPassed(true);
   }
 
   private void initTestMap() {
@@ -51,19 +70,28 @@ public class MapManager {
     };
 
     int[][] insideArray = {
-        {0, 1, 1, 1, 2},
-        {22, 23, 23, 23, 24},
-        {22, 23, 23, 23, 24},
-        {22, 23, 23, 23, 24},
-        {44, 45, 45, 45, 46}
+        {374, 377, 377, 377, 377, 377, 378},
+        {396, 0, 1, 1, 1, 2, 400},
+        {396, 22, 23, 23, 23, 24, 400},
+        {396, 22, 23, 23, 23, 24, 400},
+        {396, 22, 23, 23, 23, 24, 400},
+        {396, 44, 45, 45, 45, 46, 400},
+        {462, 465, 463, 394, 464, 465, 466},
     };
 
     ArrayList<Building> buildingArrayList = new ArrayList<>();
     buildingArrayList.add(new Building(new PointF(200, 200), Buildings.HOUSE_ONE));
 
-    insideMap = new GameMap(insideArray, Floor.INSIDE, null);
-    outsideMap = new GameMap(outsideArray, Floor.OUTSIDE, buildingArrayList);
-    currentMap = insideMap;
+    insideMap = new GameMap(insideArray, Tiles.INSIDE, null, HelpMethods.GetSkeletonsRandomized(2, insideArray));
+    outsideMap = new GameMap(outsideArray, Tiles.OUTSIDE, buildingArrayList, HelpMethods.GetSkeletonsRandomized(5, outsideArray));
+//    HelpMethods.AddDoorwayToGameMap(outsideMap, insideMap, 0);
+    HelpMethods.ConnectTwoDoorways(
+        outsideMap,
+        HelpMethods.CreateHitboxForDoorway(outsideMap, 0),
+        insideMap,
+        HelpMethods.CreateHitboxForDoorway(3, 6)
+        );
+    currentMap = outsideMap;
   }
   public void drawBuildings(Canvas c) {
     if (currentMap.getBuildingArrayList() != null)
@@ -80,18 +108,16 @@ public class MapManager {
     }
   }
 
-   public void draw(Canvas c) {
+  public void draw(Canvas c) {
     drawTiles(c);
     drawBuildings(c);
-   }
+  }
 
-
-  public boolean canMoveHere(float x, float y) {
-    if (x<0 || y<0)
-      return false;
-    if (x >= getMaxWidthCurrentMap() || y >= getMaxHeightCurrentMap())
-      return false;
-    return true;
+  public Doorway isPlayerOnDoorway(RectF playerHitbox) {
+    for (Doorway doorway: currentMap.getDoorwayArrayList())
+      if(doorway.isPlayerInsideDoorway(playerHitbox, cameraX, cameraY))
+        return doorway;
+    return null;
   }
 
   public int getMaxWidthCurrentMap() {

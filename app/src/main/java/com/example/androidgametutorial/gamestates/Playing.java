@@ -56,9 +56,6 @@ public class Playing extends BaseState implements GameStateInterface {
     redPaint.setStyle(Paint.Style.STROKE);
     redPaint.setColor(Color.RED);
 
-//    for(int i=0; i<5; i++)
-//      spawnSkeleton();
-
     updateWepHitbox();
   }
 
@@ -304,15 +301,25 @@ public class Playing extends BaseState implements GameStateInterface {
     // Camera displacement X and Y
     float deltaX = xSpeed * baseSpeed * (-1);
     float deltaY = ySpeed * baseSpeed * (-1);
-    if (xSpeed <= 0) pWidth = 0;
-    if (ySpeed <=0) pHeight = 0;
+    float deltaCameraX = -(cameraX+deltaX);
+    float deltaCameraY = -(cameraY+deltaY);
 
-//    float xPosToCheck = player.getHitbox().left-(cameraX+deltaX)+pWidth;
-//    float yPosToCheck = player.getHitbox().top - (cameraY+deltaY) + pHeight;
-//    if(HelpMethods.CanWalkHere(xPosToCheck, yPosToCheck, mapManager.getCurrentMap())) {
-//      cameraX += deltaX;
-//      cameraY += deltaY;
-//    }
+    if(HelpMethods.CanWalkHere(player.getHitbox(), deltaCameraX, deltaCameraY, mapManager.getCurrentMap())) {
+      cameraX += deltaX;
+      cameraY += deltaY;
+    } else {
+      if (HelpMethods.CanWalkHere(player.getHitbox(), 0, deltaCameraY, mapManager.getCurrentMap())) {
+        cameraY += deltaY;
+      } else {
+        // Still move a bit if deltaCameraY too big -> move the part it is still inside
+        cameraY = HelpMethods.MoveNextToTileUpDown(player.getHitbox(), cameraY, deltaY);
+      }
+      if (HelpMethods.CanWalkHere(player.getHitbox(), deltaCameraX, 0, mapManager.getCurrentMap())) {
+        cameraX += deltaX;
+      } else {
+        // Move next to solid tile, in x dir
+      }
+    }
   }
 
   public void setPlayerMoveTrue(PointF lastTouchDiff) {

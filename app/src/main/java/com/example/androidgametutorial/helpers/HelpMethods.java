@@ -1,5 +1,6 @@
 package com.example.androidgametutorial.helpers;
 
+import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.RectF;
 import android.location.GnssAntennaInfo;
@@ -59,21 +60,74 @@ public class HelpMethods {
     return skeletonArrayList;
   }
 
-  public static boolean CanWalkHere(float x, float y, GameMap gameMap) {
-    if (x<0 || y<0)
+  public static boolean CanWalkHere (RectF hitbox, float deltaX, float deltaY, GameMap gameMap) {
+    if (hitbox.left + deltaX < 0 || hitbox.top + deltaY < 0) {
       return false;
-    if(x>=gameMap.getMapWidth() || y>=gameMap.getMapHeight())
+    }
+    if (hitbox.right + deltaX >= gameMap.getMapWidth()) {
       return false;
-    int tileX = (int) (x/GameConstants.Sprite.SIZE);
-    int tileY = (int) (y/GameConstants.Sprite.SIZE);
-    int tileId = gameMap.getSpriteId(tileX, tileY);
-    return isTileWalkable(tileId, gameMap.getFloorType());
+    }
+    if (hitbox.bottom + deltaY >= gameMap.getMapHeight())
+      return false;
+    Point[] tileCoords = GetTileCoords(hitbox, deltaX, deltaY);
+    int[] tileIds = GetTileIds(tileCoords, gameMap);
+    return IsTilesWalkable(tileIds, gameMap.getFloorType());
   }
 
-  public static boolean isTileWalkable(int tileId, Tiles tilesType) {
+  private static int[] GetTileIds(Point[] tileCoords, GameMap gameMap) {
+    int[] tileIds = new int[4];
+    for (int i=0; i<tileCoords.length; i++) {
+      tileIds[i] = gameMap.getSpriteId(tileCoords[i].x, tileCoords[i].y);
+    }
+    return tileIds;
+  }
+
+
+  private static Point[] GetTileCoords(RectF hitbox, float deltaX, float deltaY) {
+    Point[] tileCoords = new Point[4];
+    int left = (int)((hitbox.left + deltaX) / GameConstants.Sprite.SIZE);
+    int right = (int)((hitbox.right + deltaX) / GameConstants.Sprite.SIZE);
+    int top = (int)((hitbox.top + deltaY) / GameConstants.Sprite.SIZE);
+    int bottom = (int)((hitbox.bottom + deltaY) / GameConstants.Sprite.SIZE);
+    tileCoords[0] = new Point(left, top);
+    tileCoords[1] = new Point(right, top);
+    tileCoords[2] = new Point(left, bottom);
+    tileCoords[3] = new Point(right, bottom);
+    return tileCoords;
+  }
+
+  public static boolean IsTileWalkable(int tileId, Tiles tilesType) {
     if (tilesType == Tiles.INSIDE) {
       return (tileId == 394 || tileId < 374);
     }
     return true;
+  }
+
+  public static boolean IsTilesWalkable(int[] tileIds, Tiles tilesType) {
+    for(int i: tileIds) {
+      if (!(IsTileWalkable(i, tilesType)))
+        return false;
+    }
+    return true;
+  }
+
+  public static float MoveNextToTileUpDown(RectF hitbox, float cameraY, float deltaY) {
+    int currentTile;
+    int playerPosY; // player position on screen
+    float cameraYReturn; // tiny gap between top and the "wall"
+
+    // Player moving up
+    if (deltaY > 0) {
+      playerPosY = (int) (hitbox.top - cameraY);
+      currentTile = playerPosY / GameConstants.Sprite.SIZE;
+      cameraYReturn = hitbox.top - (currentTile * GameConstants.Sprite.SIZE);
+    } else {
+      playerPosY = (int) (hitbox.bottom - cameraY);
+      currentTile = playerPosY / GameConstants.Sprite.SIZE;
+      // bottom+1 to make it just over the bottom border
+      cameraYReturn = (hitbox.bottom+1) - (currentTile+1)*GameConstants.Sprite.SIZE;
+    }
+    // when move up: -epsilon; when move down: + epsilon
+    return cameraYReturn;
   }
 }

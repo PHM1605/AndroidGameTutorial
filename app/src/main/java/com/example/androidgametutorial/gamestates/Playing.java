@@ -68,8 +68,7 @@ public class Playing extends BaseState implements GameStateInterface {
 
   @Override
   public void update(double delta) {
-    if (!listOfEntitiesMade)
-      buildEntityList();
+    buildEntityList();
     updatePlayerMove(delta);
     player.update(delta, movePlayer);
     mapManager.setCameraValues(cameraX, cameraY);

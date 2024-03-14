@@ -43,7 +43,7 @@ public class GameMap {
     return list;
   }
 
-  private int getDrawableAmount() {
+  public int getDrawableAmount() {
     int amount = 0;
     if (buildingArrayList != null)
       amount += buildingArrayList.size();

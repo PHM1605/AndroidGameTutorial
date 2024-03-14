@@ -12,8 +12,11 @@ import android.graphics.PointF;
 import android.graphics.RectF;
 import android.view.MotionEvent;
 
+import com.example.androidgametutorial.entities.Building;
 import com.example.androidgametutorial.entities.BuildingManager;
 import com.example.androidgametutorial.entities.Character;
+import com.example.androidgametutorial.entities.Entity;
+import com.example.androidgametutorial.entities.GameObject;
 import com.example.androidgametutorial.entities.Player;
 import com.example.androidgametutorial.entities.Weapons;
 import com.example.androidgametutorial.entities.enemies.Skeleton;
@@ -26,8 +29,10 @@ import com.example.androidgametutorial.main.Game;
 import com.example.androidgametutorial.ui.PlayingUI;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class Playing extends BaseState implements GameStateInterface {
+  // Distance from top of Cam to top of Map
   private float cameraX, cameraY;
   private boolean movePlayer;
   private PointF lastTouchDiff;
@@ -41,6 +46,8 @@ public class Playing extends BaseState implements GameStateInterface {
   private boolean attacking = false;
   private boolean attackChecked;
   private boolean doorwayJustPassed;
+  private Entity[] listOfDrawables;
+  private boolean listOfEntitiesMade;
 
   public Playing(Game game) {
     super(game);
@@ -61,6 +68,8 @@ public class Playing extends BaseState implements GameStateInterface {
 
   @Override
   public void update(double delta) {
+    if (!listOfEntitiesMade)
+      buildEntityList();
     updatePlayerMove(delta);
     player.update(delta, movePlayer);
     mapManager.setCameraValues(cameraX, cameraY);
@@ -74,6 +83,19 @@ public class Playing extends BaseState implements GameStateInterface {
     for (Skeleton skeleton: mapManager.getCurrentMap().getSkeletonArrayList())
       if (skeleton.isActive())
         skeleton.update(delta, mapManager.getCurrentMap());
+    
+    sortArray();
+  }
+
+  private void buildEntityList() {
+    listOfDrawables = mapManager.getCurrentMap().getDrawableList();
+    listOfDrawables[listOfDrawables.length-1] = player;
+    listOfEntitiesMade = true;
+  }
+
+  private void sortArray() {
+    player.setLastCameraYValue(cameraY);
+    Arrays.sort(listOfDrawables);
   }
 
   private void checkForDoorway() {
@@ -174,15 +196,34 @@ public class Playing extends BaseState implements GameStateInterface {
 
   @Override
   public void render(Canvas c) {
-    mapManager.draw(c);
+    mapManager.drawTiles(c);
+    if (listOfEntitiesMade)
+      drawSortedEntities(c);
 //    buildingManager.draw(c);
-    drawPlayer(c);
-    for (Skeleton skeleton: mapManager.getCurrentMap().getSkeletonArrayList()) {
-      if (skeleton.isActive())
-        drawCharacter(c, skeleton);
-    }
+//    drawPlayer(c);
+//    for (Skeleton skeleton: mapManager.getCurrentMap().getSkeletonArrayList()) {
+//      if (skeleton.isActive())
+//        drawCharacter(c, skeleton);
+//    }
 
     playingUI.draw(c);
+  }
+
+  private void drawSortedEntities(Canvas c) {
+    for (Entity e: listOfDrawables) {
+      if (e instanceof Skeleton) {
+        Skeleton skeleton = (Skeleton) e;
+        if (skeleton.isActive()) drawCharacter(c, skeleton);
+      } else if (e instanceof GameObject) {
+        GameObject gameObject = (GameObject) e;
+        mapManager.drawObject(c, gameObject);
+      } else if (e instanceof Building) {
+        Building building = (Building) e;
+        mapManager.drawBuilding(c, building);
+      } else if (e instanceof Player) {
+        drawPlayer(c);
+      }
+    }
   }
 
   private void drawPlayer(Canvas c) {
@@ -308,17 +349,17 @@ public class Playing extends BaseState implements GameStateInterface {
       cameraX += deltaX;
       cameraY += deltaY;
     } else {
-      if (HelpMethods.CanWalkHere(player.getHitbox(), 0, deltaCameraY, mapManager.getCurrentMap())) {
-        cameraY += deltaY;
-      } else {
-        // Still move a bit if deltaCameraY too big -> move the part it is still inside
-        cameraY = HelpMethods.MoveNextToTileUpDown(player.getHitbox(), cameraY, deltaY);
-      }
-      if (HelpMethods.CanWalkHere(player.getHitbox(), deltaCameraX, 0, mapManager.getCurrentMap())) {
-        cameraX += deltaX;
-      } else {
-        // Move next to solid tile, in x dir
-      }
+//      if (HelpMethods.CanWalkHereUpDown(player.getHitbox(), -cameraX, deltaCameraY, mapManager.getCurrentMap())) {
+//        cameraY += deltaY;
+//      } else {
+//        // Still move a bit if deltaCameraY too big -> move the part it is still inside
+//        cameraY = HelpMethods.MoveNextToTileUpDown(player.getHitbox(), cameraY, deltaY);
+//      }
+//      if (HelpMethods.CanWalkHereLeftRight(player.getHitbox(), deltaCameraX, -cameraY, mapManager.getCurrentMap())) {
+//        cameraX += deltaX;
+//      } else {
+//        cameraX = HelpMethods.MoveNextToTileLeftRight(player.getHitbox(), cameraX, deltaX);
+//      }
     }
   }
 

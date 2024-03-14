@@ -6,6 +6,7 @@ import android.graphics.RectF;
 import android.location.GnssAntennaInfo;
 
 import com.example.androidgametutorial.entities.Building;
+import com.example.androidgametutorial.entities.GameObject;
 import com.example.androidgametutorial.entities.enemies.Skeleton;
 import com.example.androidgametutorial.environments.Doorway;
 import com.example.androidgametutorial.environments.GameMap;
@@ -60,6 +61,31 @@ public class HelpMethods {
     return skeletonArrayList;
   }
 
+  public static boolean CanWalkHereUpDown (RectF hitbox, float currentCameraX, float deltaY, GameMap gameMap) {
+    if (hitbox.top + deltaY < 0) {
+      return false;
+    }
+    if (hitbox.bottom + deltaY >= gameMap.getMapHeight())
+      return false;
+    Point[] tileCoords = GetTileCoords(hitbox, currentCameraX, deltaY);
+    int[] tileIds = GetTileIds(tileCoords, gameMap);
+    return IsTilesWalkable(tileIds, gameMap.getFloorType());
+  }
+
+  public static boolean CanWalkHereLeftRight (RectF hitbox, float deltaX, float currentCameraY, GameMap gameMap) {
+    if (hitbox.left + deltaX < 0) {
+      return false;
+    }
+    if (hitbox.right + deltaX >= gameMap.getMapWidth()) {
+      return false;
+    }
+    Point[] tileCoords = GetTileCoords(hitbox, deltaX, currentCameraY);
+    int[] tileIds = GetTileIds(tileCoords, gameMap);
+    return IsTilesWalkable(tileIds, gameMap.getFloorType());
+  }
+
+  // Bug potential: use this function to check moving up-down i.e. deltaX =0, deltaY=abc then returns false immediately
+  // -> we need to split to CanWalkHereUpDown and CanWalkHereLeftRight
   public static boolean CanWalkHere (RectF hitbox, float deltaX, float deltaY, GameMap gameMap) {
     if (hitbox.left + deltaX < 0 || hitbox.top + deltaY < 0) {
       return false;
@@ -69,6 +95,18 @@ public class HelpMethods {
     }
     if (hitbox.bottom + deltaY >= gameMap.getMapHeight())
       return false;
+
+    // To offset Player to take into account the camera
+
+    // If we collide to any object
+    if (gameMap.getGameObjectArrayList() != null) {
+      for (GameObject go: gameMap.getGameObjectArrayList()) {
+        if (RectF.intersects(go.getHitbox(), hitbox))
+          return false;
+      }
+    }
+
+
     Point[] tileCoords = GetTileCoords(hitbox, deltaX, deltaY);
     int[] tileIds = GetTileIds(tileCoords, gameMap);
     return IsTilesWalkable(tileIds, gameMap.getFloorType());
@@ -112,8 +150,9 @@ public class HelpMethods {
   }
 
   public static float MoveNextToTileUpDown(RectF hitbox, float cameraY, float deltaY) {
+    // cameraY: distance from top of Cam to top of Map
     int currentTile;
-    int playerPosY; // player position on screen
+    int playerPosY; // player offset from where it should be
     float cameraYReturn; // tiny gap between top and the "wall"
 
     // Player moving up
@@ -127,7 +166,27 @@ public class HelpMethods {
       // bottom+1 to make it just over the bottom border
       cameraYReturn = (hitbox.bottom+1) - (currentTile+1)*GameConstants.Sprite.SIZE;
     }
-    // when move up: -epsilon; when move down: + epsilon
     return cameraYReturn;
   }
+
+  public static float MoveNextToTileLeftRight(RectF hitbox, float cameraX, float deltaX) {
+    // cameraY: distance from top of Cam to top of Map
+    int currentTile;
+    int playerPosX; // player offset from where it should be
+    float cameraXReturn; // tiny gap between top and the "wall"
+
+    // Player moving left
+    if (deltaX > 0) {
+      playerPosX = (int) (hitbox.left - cameraX);
+      currentTile = playerPosX / GameConstants.Sprite.SIZE;
+      cameraXReturn = hitbox.left - (currentTile * GameConstants.Sprite.SIZE);
+    } else {
+      playerPosX = (int) (hitbox.right - cameraX);
+      currentTile = playerPosX / GameConstants.Sprite.SIZE;
+      // bottom+1 to make it just over the bottom border
+      cameraXReturn = (hitbox.right+1) - (currentTile+1)*GameConstants.Sprite.SIZE;
+    }
+    return cameraXReturn;
+  }
+
 }

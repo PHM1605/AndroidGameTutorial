@@ -6,6 +6,8 @@ import android.graphics.RectF;
 
 import com.example.androidgametutorial.entities.Building;
 import com.example.androidgametutorial.entities.Buildings;
+import com.example.androidgametutorial.entities.GameObject;
+import com.example.androidgametutorial.entities.GameObjects;
 import com.example.androidgametutorial.gamestates.Playing;
 import com.example.androidgametutorial.helpers.GameConstants;
 import com.example.androidgametutorial.helpers.HelpMethods;
@@ -81,9 +83,17 @@ public class MapManager {
 
     ArrayList<Building> buildingArrayList = new ArrayList<>();
     buildingArrayList.add(new Building(new PointF(200, 200), Buildings.HOUSE_ONE));
+    ArrayList<GameObject> gameObjectArrayList = new ArrayList<>();
+    gameObjectArrayList.add(new GameObject(new PointF(600, 200), GameObjects.PILLAR_YELLOW));
+    gameObjectArrayList.add(new GameObject(new PointF(600, 400), GameObjects.STATUE_ANGRY_YELLOW));
+    gameObjectArrayList.add(new GameObject(new PointF(1000, 400), GameObjects.STATUE_ANGRY_YELLOW));
+    gameObjectArrayList.add(new GameObject(new PointF(200, 350), GameObjects.FROG_YELLOW));
+    gameObjectArrayList.add(new GameObject(new PointF(200, 550), GameObjects.FROG_GREEN));
+    gameObjectArrayList.add(new GameObject(new PointF(50, 50), GameObjects.BASKET_FULL_RED_FRUIT));
+    gameObjectArrayList.add(new GameObject(new PointF(800, 800), GameObjects.OVEN_SNOW_YELLOW));
 
-    insideMap = new GameMap(insideArray, Tiles.INSIDE, null, HelpMethods.GetSkeletonsRandomized(2, insideArray));
-    outsideMap = new GameMap(outsideArray, Tiles.OUTSIDE, buildingArrayList, HelpMethods.GetSkeletonsRandomized(5, outsideArray));
+    insideMap = new GameMap(insideArray, Tiles.INSIDE, null,null, HelpMethods.GetSkeletonsRandomized(2, insideArray));
+    outsideMap = new GameMap(outsideArray, Tiles.OUTSIDE, buildingArrayList, gameObjectArrayList, HelpMethods.GetSkeletonsRandomized(5, outsideArray));
 //    HelpMethods.AddDoorwayToGameMap(outsideMap, insideMap, 0);
     HelpMethods.ConnectTwoDoorways(
         outsideMap,
@@ -93,11 +103,17 @@ public class MapManager {
         );
     currentMap = outsideMap;
   }
-  public void drawBuildings(Canvas c) {
-    if (currentMap.getBuildingArrayList() != null)
-      for(Building b: currentMap.getBuildingArrayList()) {
-        c.drawBitmap(b.getBuildingType().getHouseImg(), b.getPos().x + cameraX, b.getPos().y + cameraY, null);
-      }
+
+  public void drawObject(Canvas c, GameObject go) {
+    c.drawBitmap(
+        go.getObjectType().getObjectImg(),
+        go.getHitbox().left + cameraX,
+        go.getHitbox().top - go.getObjectType().getHitboxRoof() + cameraY,
+        null);
+  }
+
+  public void drawBuilding(Canvas c, Building b) {
+    c.drawBitmap(b.getBuildingType().getHouseImg(), b.getPos().x + cameraX, b.getPos().y + cameraY, null);
   }
 
   public void drawTiles(Canvas c) {
@@ -106,11 +122,6 @@ public class MapManager {
         c.drawBitmap(currentMap.getFloorType().getSprite(currentMap.getSpriteId(i,j)), i*GameConstants.Sprite.SIZE+cameraX, j*GameConstants.Sprite.SIZE+cameraY, null);
       }
     }
-  }
-
-  public void draw(Canvas c) {
-    drawTiles(c);
-    drawBuildings(c);
   }
 
   public Doorway isPlayerOnDoorway(RectF playerHitbox) {

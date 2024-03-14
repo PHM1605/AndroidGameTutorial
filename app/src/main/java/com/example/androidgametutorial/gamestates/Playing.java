@@ -349,17 +349,12 @@ public class Playing extends BaseState implements GameStateInterface {
       cameraX += deltaX;
       cameraY += deltaY;
     } else {
-//      if (HelpMethods.CanWalkHereUpDown(player.getHitbox(), -cameraX, deltaCameraY, mapManager.getCurrentMap())) {
-//        cameraY += deltaY;
-//      } else {
-//        // Still move a bit if deltaCameraY too big -> move the part it is still inside
-//        cameraY = HelpMethods.MoveNextToTileUpDown(player.getHitbox(), cameraY, deltaY);
-//      }
-//      if (HelpMethods.CanWalkHereLeftRight(player.getHitbox(), deltaCameraX, -cameraY, mapManager.getCurrentMap())) {
-//        cameraX += deltaX;
-//      } else {
-//        cameraX = HelpMethods.MoveNextToTileLeftRight(player.getHitbox(), cameraX, deltaX);
-//      }
+      if (HelpMethods.CanWalkHereUpDown(player.getHitbox(), -cameraX, deltaCameraY, mapManager.getCurrentMap())) {
+        cameraY += deltaY;
+      }
+      if (HelpMethods.CanWalkHereLeftRight(player.getHitbox(), deltaCameraX, -cameraY, mapManager.getCurrentMap())) {
+        cameraX += deltaX;
+      }
     }
   }
 

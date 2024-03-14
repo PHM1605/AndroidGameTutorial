@@ -3,7 +3,6 @@ package com.example.androidgametutorial.helpers;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.RectF;
-import android.location.GnssAntennaInfo;
 
 import com.example.androidgametutorial.entities.Building;
 import com.example.androidgametutorial.entities.GameObject;
@@ -15,35 +14,26 @@ import com.example.androidgametutorial.environments.Tiles;
 import java.util.ArrayList;
 
 public class HelpMethods {
-//  public static void AddDoorwayToGameMap(GameMap gameMapLocatedIn, GameMap gameMapTarget, int buildingIndex) {
-//    Building building = gameMapLocatedIn.getBuildingArrayList().get(buildingIndex);
-//    float houseX = building.getPos().x;
-//    float houseY = building.getPos().y;
-//    RectF hitbox = building.getBuildingType().getHitboxDoorway();
-//    Doorway doorway = new Doorway(new RectF(
-//        hitbox.left+houseX, hitbox.top+houseY, hitbox.right+houseX, hitbox.bottom+houseY), gameMapTarget);
-//    gameMapLocatedIn.addDoorway(doorway);
-//  }
 
   // Use this in case we have a Building from a GameMap
-  public static RectF CreateHitboxForDoorway(GameMap gameMapLocatedIn, int buildingIndex) {
+  public static PointF CreatePointForDoorway(GameMap gameMapLocatedIn, int buildingIndex) {
     Building building = gameMapLocatedIn.getBuildingArrayList().get(buildingIndex);
-    float houseX = building.getPos().x;
-    float houseY = building.getPos().y;
-    RectF hitbox = building.getBuildingType().getHitboxDoorway();
-    return new RectF(hitbox.left+houseX, hitbox.top+houseY, hitbox.right+houseX, hitbox.bottom+houseY);
+    float x = building.getPos().x;
+    float y = building.getPos().y;
+    PointF point = building.getBuildingType().getDoorwayPoint();
+    return new PointF(point.x + x, point.y + y);
   }
 
   // Use this in case we have a Tile pattern only
-  public static RectF CreateHitboxForDoorway(int xTile, int yTile) {
-    float x = xTile * GameConstants.Sprite.SIZE;
+  public static PointF CreatePointForDoorway(int xTile, int yTile) {
+    float x = xTile * GameConstants.Sprite.SIZE+1;
     float y = yTile * GameConstants.Sprite.SIZE;
-    return new RectF(x, y, x+GameConstants.Sprite.SIZE, y+GameConstants.Sprite.SIZE);
+    return new PointF(x+1, y+1);
   }
 
-  public static void ConnectTwoDoorways(GameMap gameMapOne, RectF hitboxOne, GameMap gameMapTwo, RectF hitboxTwo) {
-    Doorway doorwayOne = new Doorway(hitboxOne, gameMapOne);
-    Doorway doorwayTwo = new Doorway(hitboxTwo, gameMapTwo);
+  public static void ConnectTwoDoorways(GameMap gameMapOne, PointF pointOne, GameMap gameMapTwo, PointF pointTwo) {
+    Doorway doorwayOne = new Doorway(pointOne, gameMapOne);
+    Doorway doorwayTwo = new Doorway(pointTwo, gameMapTwo);
     doorwayOne.connectDoorway(doorwayTwo);
     doorwayTwo.connectDoorway(doorwayOne);
   }
@@ -67,6 +57,29 @@ public class HelpMethods {
     }
     if (hitbox.bottom + deltaY >= gameMap.getMapHeight())
       return false;
+
+    // collision with other GameObjects
+    if (gameMap.getGameObjectArrayList() != null) {
+      RectF tempHitbox = new RectF(hitbox.left + currentCameraX, hitbox.top + deltaY, hitbox.right + currentCameraX, hitbox.bottom + deltaY);
+      for (GameObject go: gameMap.getGameObjectArrayList()) {
+        if (RectF.intersects(go.getHitbox(), tempHitbox))
+          return false;
+      }
+    }
+
+    // collision with Buildings
+    if (gameMap.getGameObjectArrayList() != null) {
+      RectF tempHitbox = new RectF(
+          hitbox.left + currentCameraX,
+          hitbox.top + deltaY,
+          hitbox.right + currentCameraX,
+          hitbox.bottom + deltaY);
+      for (Building b: gameMap.getBuildingArrayList()) {
+        if (RectF.intersects(b.getHitbox(), tempHitbox))
+          return false;
+      }
+    }
+
     Point[] tileCoords = GetTileCoords(hitbox, currentCameraX, deltaY);
     int[] tileIds = GetTileIds(tileCoords, gameMap);
     return IsTilesWalkable(tileIds, gameMap.getFloorType());
@@ -79,6 +92,33 @@ public class HelpMethods {
     if (hitbox.right + deltaX >= gameMap.getMapWidth()) {
       return false;
     }
+
+    // collision with other GameObjects
+    if (gameMap.getGameObjectArrayList() != null) {
+      RectF tempHitbox = new RectF(
+          hitbox.left + deltaX,
+          hitbox.top + currentCameraY,
+          hitbox.right + deltaX,
+          hitbox.bottom + currentCameraY);
+      for (GameObject go: gameMap.getGameObjectArrayList()) {
+        if (RectF.intersects(go.getHitbox(), tempHitbox))
+          return false;
+      }
+    }
+
+    // collision with Buildings
+    if (gameMap.getGameObjectArrayList() != null) {
+      RectF tempHitbox = new RectF(
+          hitbox.left + deltaX,
+          hitbox.top + currentCameraY,
+          hitbox.right + deltaX,
+          hitbox.bottom + currentCameraY);
+      for (Building b: gameMap.getBuildingArrayList()) {
+        if (RectF.intersects(b.getHitbox(), tempHitbox))
+          return false;
+      }
+    }
+
     Point[] tileCoords = GetTileCoords(hitbox, deltaX, currentCameraY);
     int[] tileIds = GetTileIds(tileCoords, gameMap);
     return IsTilesWalkable(tileIds, gameMap.getFloorType());
@@ -96,16 +136,27 @@ public class HelpMethods {
     if (hitbox.bottom + deltaY >= gameMap.getMapHeight())
       return false;
 
-    // To offset Player to take into account the camera
-
     // If we collide to any object
     if (gameMap.getGameObjectArrayList() != null) {
+      RectF tempHitbox = new RectF(hitbox.left + deltaX, hitbox.top + deltaY, hitbox.right + deltaX, hitbox.bottom + deltaY);
       for (GameObject go: gameMap.getGameObjectArrayList()) {
-        if (RectF.intersects(go.getHitbox(), hitbox))
+        if (RectF.intersects(go.getHitbox(), tempHitbox))
           return false;
       }
     }
 
+    // collision with Buildings
+    if (gameMap.getGameObjectArrayList() != null) {
+      RectF tempHitbox = new RectF(
+          hitbox.left + deltaX,
+          hitbox.top + deltaY,
+          hitbox.right + deltaX,
+          hitbox.bottom + deltaY);
+      for (Building b: gameMap.getBuildingArrayList()) {
+        if (RectF.intersects(b.getHitbox(), tempHitbox))
+          return false;
+      }
+    }
 
     Point[] tileCoords = GetTileCoords(hitbox, deltaX, deltaY);
     int[] tileIds = GetTileIds(tileCoords, gameMap);

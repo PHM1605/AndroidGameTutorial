@@ -97,9 +97,9 @@ public class MapManager {
 //    HelpMethods.AddDoorwayToGameMap(outsideMap, insideMap, 0);
     HelpMethods.ConnectTwoDoorways(
         outsideMap,
-        HelpMethods.CreateHitboxForDoorway(outsideMap, 0),
+        HelpMethods.CreatePointForDoorway(outsideMap, 0),
         insideMap,
-        HelpMethods.CreateHitboxForDoorway(3, 6)
+        HelpMethods.CreatePointForDoorway(3, 6)
         );
     currentMap = outsideMap;
   }
@@ -113,7 +113,11 @@ public class MapManager {
   }
 
   public void drawBuilding(Canvas c, Building b) {
-    c.drawBitmap(b.getBuildingType().getHouseImg(), b.getPos().x + cameraX, b.getPos().y + cameraY, null);
+    c.drawBitmap(
+        b.getBuildingType().getHouseImg(),
+        b.getPos().x + cameraX,
+        b.getPos().y-b.getBuildingType().getHitboxRoof() + cameraY,
+        null);
   }
 
   public void drawTiles(Canvas c) {

@@ -4,13 +4,13 @@ import android.graphics.PointF;
 import android.graphics.RectF;
 
 public class Doorway {
-  private RectF hitbox;
   private boolean active = true;
   private final GameMap gameMapLocatedIn;
   private Doorway doorwayConnectedTo;
+  private PointF doorwayPoint;
 
-  public Doorway(RectF doorwayHitbox, GameMap gameMapLocatedIn) {
-    this.hitbox = doorwayHitbox;
+  public Doorway(PointF doorwayPoint, GameMap gameMapLocatedIn) {
+    this.doorwayPoint = doorwayPoint;
     this.gameMapLocatedIn = gameMapLocatedIn;
     gameMapLocatedIn.addDoorway(this);
   }
@@ -26,7 +26,7 @@ public class Doorway {
   }
 
   public boolean isPlayerInsideDoorway(RectF playerHitbox, float cameraX, float cameraY ) {
-    return playerHitbox.intersects(hitbox.left + cameraX, hitbox.top+cameraY, hitbox.right+cameraX, hitbox.bottom+cameraY);
+    return playerHitbox.contains(doorwayPoint.x + cameraX, doorwayPoint.y + cameraY);
   }
 
   public boolean isDoorwayActive() {
@@ -42,7 +42,7 @@ public class Doorway {
   }
 
   public PointF getPosOfDoorway() {
-    return new PointF(hitbox.left, hitbox.top);
+    return doorwayPoint;
   }
 }
 
